@@ -1,18 +1,29 @@
 // Main App Component
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, AppState } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, AppState, Appearance } from 'react-native';
 import { Provider } from 'react-redux';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 import { store } from './store';
+import { useAppSelector } from './hooks';
 import Navigation from './Navigation';
+import ErrorBoundary from './ErrorBoundary';
+import { ThemeProvider, useTheme } from '../shared/theme/ThemeContext';
 import { expoDb, runMigrations, seedDatabase, useDrizzleStudio } from '../services/database';
 import { fetchSettings } from '../features/settings/settingsSlice';
 import { fetchAccounts } from '../features/accounts/accountsSlice';
 import { fetchCategories } from '../features/categories/categoriesSlice';
 import { restoreSession, syncNow } from '../features/auth/authSlice';
+
+function ThemeSync() {
+  const theme = useAppSelector((state) => state.settings.theme);
+  useEffect(() => {
+    Appearance.setColorScheme(theme === 'light' || theme === 'dark' ? theme : 'unspecified');
+  }, [theme]);
+  return null;
+}
 
 function DrizzleStudio() {
   useDrizzleStudio(expoDb);
@@ -20,6 +31,8 @@ function DrizzleStudio() {
 }
 
 function AppContent() {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const appState = useRef(AppState.currentState);
@@ -66,28 +79,34 @@ function AppContent() {
     }
   };
 
+  let content: React.ReactNode;
   if (isInitializing) {
-    return (
+    content = (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading AI Wallet...</Text>
       </View>
     );
-  }
-
-  if (error) {
-    return (
+  } else if (error) {
+    content = (
       <View style={styles.errorContainer}>
         <Text style={styles.errorTitle}>Initialization Error</Text>
         <Text style={styles.errorText}>{error}</Text>
       </View>
     );
+  } else {
+    content = (
+      <ErrorBoundary>
+        {__DEV__ && <DrizzleStudio />}
+        <Navigation />
+      </ErrorBoundary>
+    );
   }
 
   return (
     <>
-      {__DEV__ && <DrizzleStudio />}
-      <Navigation />
+      <ThemeSync />
+      {content}
     </>
   );
 }
@@ -95,42 +114,46 @@ function AppContent() {
 export default function App() {
   return (
     <Provider store={store}>
-      <SafeAreaProvider>
-        <StatusBar style="auto" />
-        <AppContent />
-      </SafeAreaProvider>
+      <ThemeProvider>
+        <SafeAreaProvider>
+          <StatusBar style="auto" />
+          <AppContent />
+        </SafeAreaProvider>
+      </ThemeProvider>
     </Provider>
   );
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 32,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#F44336',
-    marginBottom: 12,
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
+  return StyleSheet.create({
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+    loadingText: {
+      marginTop: 16,
+      fontSize: 16,
+      color: colors.textSecondary,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      padding: 32,
+    },
+    errorTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: colors.danger,
+      marginBottom: 12,
+    },
+    errorText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+  });
+}

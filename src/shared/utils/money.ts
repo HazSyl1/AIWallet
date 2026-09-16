@@ -20,10 +20,28 @@ export const paiseToRupees = (paise: number): number => {
 };
 
 /**
+ * Group digits Indian-style (lakhs/crores: 2s after the first 3 from the right)
+ * e.g. "1234567" -> "12,34,567"
+ */
+const groupIndianDigits = (digits: string): string => {
+  if (digits.length <= 3) return digits;
+  let result = digits.slice(-3);
+  let remaining = digits.slice(0, -3);
+  while (remaining.length > 0) {
+    result = `${remaining.slice(-2)},${result}`;
+    remaining = remaining.slice(0, -2);
+  }
+  return result;
+};
+
+/**
  * Format paise as display string with rupee symbol
  * @param paise - Amount in paise
  * @param options - Formatting options
  * @returns Formatted string (e.g., "₹450.50")
+ *
+ * Uses manual Indian digit grouping rather than toLocaleString('en-IN', ...) —
+ * Hermes's Intl.NumberFormat support is unreliable across Expo Go/SDK builds.
  */
 export const formatMoney = (
   paise: number,
@@ -36,17 +54,15 @@ export const formatMoney = (
 
   const rupees = paiseToRupees(paise);
   const symbol = showSymbol ? '₹' : '';
+  const isNegative = rupees < 0;
+  const absRupees = Math.abs(rupees);
 
-  if (showDecimals) {
-    // Indian number formatting with 2 decimal places
-    return `${symbol}${rupees.toLocaleString('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  }
+  const fixed = showDecimals ? absRupees.toFixed(2) : String(Math.round(absRupees));
+  const [intPart, decPart] = fixed.split('.');
+  const grouped = groupIndianDigits(intPart);
+  const formatted = decPart ? `${grouped}.${decPart}` : grouped;
 
-  // No decimals
-  return `${symbol}${Math.round(rupees).toLocaleString('en-IN')}`;
+  return `${symbol}${isNegative ? '-' : ''}${formatted}`;
 };
 
 /**

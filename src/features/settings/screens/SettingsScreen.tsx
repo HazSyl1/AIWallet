@@ -1,6 +1,6 @@
 // Settings Screen
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,9 +9,12 @@ import { resetDatabase } from '../../../services/database';
 import { fetchAccounts } from '../../accounts/accountsSlice';
 import { fetchCategories } from '../../categories/categoriesSlice';
 import { fetchTransactions } from '../../transactions/transactionsSlice';
-import { fetchSettings } from '../settingsSlice';
+import { fetchSettings, updateSettings } from '../settingsSlice';
 import { signOut, runBackup, runRestore } from '../../auth/authSlice';
 import AuthScreen from '../../auth/screens/AuthScreen';
+import { formatDate } from '../../../shared/utils/date';
+import { useTheme } from '../../../shared/theme/ThemeContext';
+import type { ThemeColors } from '../../../shared/theme/palette';
 
 interface SettingItem {
   icon: string;
@@ -28,9 +31,20 @@ interface SettingSection {
 
 export default function SettingsScreen() {
   const dispatch = useAppDispatch();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const settings = useAppSelector((state) => state.settings);
   const { user, syncStatus, lastSyncedAt } = useAppSelector((state) => state.auth);
   const [showAuth, setShowAuth] = useState(false);
+
+  const handleThemeChange = () => {
+    Alert.alert('Theme', 'Choose your preferred appearance', [
+      { text: 'Light', onPress: () => dispatch(updateSettings({ theme: 'light' }) as any) },
+      { text: 'Dark', onPress: () => dispatch(updateSettings({ theme: 'dark' }) as any) },
+      { text: 'System', onPress: () => dispatch(updateSettings({ theme: 'system' }) as any) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
 
   const handleReset = () => {
     Alert.alert(
@@ -94,7 +108,7 @@ export default function SettingsScreen() {
               icon: 'person-circle-outline',
               title: user.email ?? 'Signed in',
               subtitle: lastSyncedAt
-                ? `Last synced ${new Date(lastSyncedAt).toLocaleDateString()}`
+                ? `Last synced ${formatDate(lastSyncedAt)}`
                 : syncStatus === 'syncing' ? 'Syncing…' : 'Never synced',
             },
             {
@@ -167,7 +181,7 @@ export default function SettingsScreen() {
           icon: 'moon-outline',
           title: 'Theme',
           subtitle: settings.theme ?? 'system',
-          onPress: () => console.log('Theme'),
+          onPress: handleThemeChange,
         },
         {
           icon: 'wallet-outline',
@@ -214,7 +228,7 @@ export default function SettingsScreen() {
       onPress={item.onPress}
     >
       <View style={styles.settingIcon}>
-        <Ionicons name={item.icon as any} size={22} color="#666" />
+        <Ionicons name={item.icon as any} size={22} color={colors.textSecondary} />
       </View>
       <View style={styles.settingContent}>
         <Text style={styles.settingTitle}>{item.title}</Text>
@@ -223,7 +237,7 @@ export default function SettingsScreen() {
         )}
       </View>
       {item.rightElement || (
-        <Ionicons name="chevron-forward" size={20} color="#ccc" />
+        <Ionicons name="chevron-forward" size={20} color={colors.iconMuted} />
       )}
     </TouchableOpacity>
   );
@@ -263,75 +277,77 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
-    textTransform: 'uppercase',
-    marginLeft: 20,
-    marginBottom: 8,
-  },
-  sectionContent: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  settingIcon: {
-    width: 32,
-    alignItems: 'center',
-  },
-  settingContent: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  settingTitle: {
-    fontSize: 16,
-    color: '#333',
-  },
-  settingSubtitle: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 2,
-  },
-  footer: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  footerSubtext: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      padding: 20,
+      paddingBottom: 10,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: colors.textPrimary,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    section: {
+      marginBottom: 24,
+    },
+    sectionTitle: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      marginLeft: 20,
+      marginBottom: 8,
+    },
+    sectionContent: {
+      backgroundColor: colors.surface,
+      marginHorizontal: 16,
+      borderRadius: 12,
+      overflow: 'hidden',
+    },
+    settingItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    settingIcon: {
+      width: 32,
+      alignItems: 'center',
+    },
+    settingContent: {
+      flex: 1,
+      marginLeft: 12,
+    },
+    settingTitle: {
+      fontSize: 16,
+      color: colors.textPrimary,
+    },
+    settingSubtitle: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    footer: {
+      alignItems: 'center',
+      padding: 32,
+    },
+    footerText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    footerSubtext: {
+      fontSize: 12,
+      color: colors.textTertiary,
+      marginTop: 4,
+    },
+  });
+}

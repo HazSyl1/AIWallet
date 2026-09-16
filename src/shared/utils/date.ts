@@ -1,5 +1,20 @@
 // Date utility functions
 
+// Manual name tables — avoids depending on Intl.DateTimeFormat via
+// toLocaleDateString('en-IN', ...), whose Hermes support is unreliable
+// across Expo Go/SDK builds.
+const MONTH_SHORT = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+const MONTH_LONG = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+const WEEKDAY_LONG = [
+  'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
+];
+
 /**
  * Parse various date formats to ISO string
  * Handles:
@@ -81,14 +96,17 @@ export const formatDate = (
     return 'Invalid date';
   }
 
-  const optionsMap: Record<string, Intl.DateTimeFormatOptions> = {
-    short: { day: 'numeric', month: 'short' },
-    medium: { day: 'numeric', month: 'short', year: 'numeric' },
-    long: { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' },
-  };
-  const options = optionsMap[format];
+  const day = date.getDate();
+  const year = date.getFullYear();
 
-  return date.toLocaleDateString('en-IN', options);
+  if (format === 'short') {
+    return `${day} ${MONTH_SHORT[date.getMonth()]}`;
+  }
+  if (format === 'long') {
+    return `${WEEKDAY_LONG[date.getDay()]} ${day} ${MONTH_LONG[date.getMonth()]} ${year}`;
+  }
+  // medium
+  return `${day} ${MONTH_SHORT[date.getMonth()]} ${year}`;
 };
 
 /**
@@ -117,7 +135,7 @@ export const formatTransactionDate = (isoString: string): string => {
   // Within last 7 days - show day name
   const daysAgo = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
   if (daysAgo < 7 && daysAgo > 0) {
-    return date.toLocaleDateString('en-IN', { weekday: 'long' });
+    return WEEKDAY_LONG[date.getDay()];
   }
 
   // Same year - show day and month

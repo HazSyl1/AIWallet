@@ -1,6 +1,6 @@
 // Transaction List Screen
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,9 +8,13 @@ import { useAppDispatch, useAppSelector } from '../../../core/hooks';
 import { fetchTransactions } from '../transactionsSlice';
 import { formatMoney, formatTransactionDate } from '../../../shared/utils';
 import { Transaction } from '../../../shared/types';
+import { useTheme } from '../../../shared/theme/ThemeContext';
+import type { ThemeColors } from '../../../shared/theme/palette';
 
 export default function TransactionListScreen() {
   const dispatch = useAppDispatch();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { items, loading, filters } = useAppSelector((state) => state.transactions);
 
   useEffect(() => {
@@ -27,7 +31,7 @@ export default function TransactionListScreen() {
         <Ionicons
           name={item.transactionType === 'expense' ? 'arrow-up' : 'arrow-down'}
           size={20}
-          color={item.transactionType === 'expense' ? '#F44336' : '#4CAF50'}
+          color={item.transactionType === 'expense' ? colors.danger : colors.primary}
         />
       </View>
       <View style={styles.details}>
@@ -50,7 +54,7 @@ export default function TransactionListScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="receipt-outline" size={64} color="#ccc" />
+      <Ionicons name="receipt-outline" size={64} color={colors.iconMuted} />
       <Text style={styles.emptyTitle}>No transactions</Text>
       <Text style={styles.emptySubtitle}>
         Your transactions will appear here
@@ -64,7 +68,7 @@ export default function TransactionListScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Transactions</Text>
         <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="filter-outline" size={24} color="#333" />
+          <Ionicons name="filter-outline" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -83,92 +87,94 @@ export default function TransactionListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  filterButton: {
-    padding: 8,
-  },
-  list: {
-    padding: 16,
-  },
-  emptyList: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  transactionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f5f5f5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  details: {
-    flex: 1,
-  },
-  merchant: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-  },
-  meta: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  amount: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  expense: {
-    color: '#F44336',
-  },
-  income: {
-    color: '#4CAF50',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 8,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 20,
+      paddingBottom: 10,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: colors.textPrimary,
+    },
+    filterButton: {
+      padding: 8,
+    },
+    list: {
+      padding: 16,
+    },
+    emptyList: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    transactionCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    iconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.surfaceVariant,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    details: {
+      flex: 1,
+    },
+    merchant: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.textPrimary,
+    },
+    meta: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    amount: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    expense: {
+      color: colors.danger,
+    },
+    income: {
+      color: colors.primary,
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      padding: 32,
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      marginTop: 16,
+    },
+    emptySubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 8,
+    },
+  });
+}

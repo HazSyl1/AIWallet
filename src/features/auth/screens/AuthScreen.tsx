@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
@@ -6,6 +6,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../../../core/hooks';
 import { signIn, signUp, clearError } from '../authSlice';
+import { useTheme } from '../../../shared/theme/ThemeContext';
+import type { ThemeColors } from '../../../shared/theme/palette';
 
 interface AuthScreenProps {
   onClose: () => void;
@@ -13,6 +15,8 @@ interface AuthScreenProps {
 
 export default function AuthScreen({ onClose }: AuthScreenProps) {
   const dispatch = useAppDispatch();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { loading, error } = useAppSelector((state) => state.auth);
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -70,7 +74,7 @@ export default function AuthScreen({ onClose }: AuthScreenProps) {
             value={email}
             onChangeText={setEmail}
             placeholder="you@example.com"
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.textTertiary}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -82,7 +86,7 @@ export default function AuthScreen({ onClose }: AuthScreenProps) {
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.textTertiary}
             secureTextEntry
           />
 
@@ -119,33 +123,35 @@ export default function AuthScreen({ onClose }: AuthScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  inner: { flex: 1, padding: 24, justifyContent: 'center' },
-  header: { marginBottom: 32 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#333' },
-  subtitle: { fontSize: 14, color: '#666', marginTop: 6 },
-  form: {},
-  label: { fontSize: 14, fontWeight: '600', color: '#555', marginBottom: 6 },
-  input: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 16,
-  },
-  error: { color: '#F44336', fontSize: 13, marginBottom: 12 },
-  submitButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  submitText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  toggleButton: { alignItems: 'center', marginTop: 20 },
-  toggleText: { color: '#4CAF50', fontSize: 14 },
-  skipButton: { alignItems: 'center', marginTop: 12 },
-  skipText: { color: '#999', fontSize: 13 },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    inner: { flex: 1, padding: 24, justifyContent: 'center' },
+    header: { marginBottom: 32 },
+    title: { fontSize: 28, fontWeight: 'bold', color: colors.textPrimary },
+    subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 6 },
+    form: {},
+    label: { fontSize: 14, fontWeight: '600', color: colors.textSecondary, marginBottom: 6 },
+    input: {
+      backgroundColor: colors.surfaceVariant,
+      borderRadius: 12,
+      padding: 16,
+      fontSize: 16,
+      color: colors.textPrimary,
+      marginBottom: 16,
+    },
+    error: { color: colors.danger, fontSize: 13, marginBottom: 12 },
+    submitButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    submitText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    toggleButton: { alignItems: 'center', marginTop: 20 },
+    toggleText: { color: colors.primary, fontSize: 14 },
+    skipButton: { alignItems: 'center', marginTop: 12 },
+    skipText: { color: colors.textTertiary, fontSize: 13 },
+  });
+}

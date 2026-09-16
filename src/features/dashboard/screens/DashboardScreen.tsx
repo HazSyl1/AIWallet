@@ -1,15 +1,20 @@
 // Dashboard Screen - Main home screen with summary
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppDispatch, useAppSelector } from '../../../core/hooks';
 import { fetchAccounts } from '../../accounts/accountsSlice';
 import { fetchRecentTransactions } from '../../transactions/transactionsSlice';
 import { formatMoney } from '../../../shared/utils';
+import { formatTransactionDate } from '../../../shared/utils/date';
+import { useTheme } from '../../../shared/theme/ThemeContext';
+import type { ThemeColors } from '../../../shared/theme/palette';
 
 export default function DashboardScreen() {
   const dispatch = useAppDispatch();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { totalBalance, loading: accountsLoading } = useAppSelector((state) => state.accounts);
   const { items: recentTransactions, loading: txLoading } = useAppSelector(
     (state) => state.transactions
@@ -52,10 +57,10 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Add</Text>
           <View style={styles.quickActions}>
-            <QuickActionButton icon="T" label="Text" color="#2196F3" />
-            <QuickActionButton icon="V" label="Voice" color="#4CAF50" />
-            <QuickActionButton icon="I" label="Image" color="#FF9800" />
-            <QuickActionButton icon="M" label="Manual" color="#9C27B0" />
+            <QuickActionButton icon="T" label="Text" color={colors.info} styles={styles} />
+            <QuickActionButton icon="V" label="Voice" color={colors.primary} styles={styles} />
+            <QuickActionButton icon="I" label="Image" color={colors.warning} styles={styles} />
+            <QuickActionButton icon="M" label="Manual" color={colors.accentPurple} styles={styles} />
           </View>
         </View>
 
@@ -75,7 +80,7 @@ export default function DashboardScreen() {
                 <View style={styles.txLeft}>
                   <Text style={styles.txMerchant}>{tx.merchant || 'Unknown'}</Text>
                   <Text style={styles.txDate}>
-                    {new Date(tx.occurredAt).toLocaleDateString()}
+                    {formatTransactionDate(tx.occurredAt)}
                   </Text>
                 </View>
                 <Text
@@ -103,10 +108,12 @@ function QuickActionButton({
   icon,
   label,
   color,
+  styles,
 }: {
   icon: string;
   label: string;
   color: string;
+  styles: ReturnType<typeof createStyles>;
 }) {
   return (
     <View style={styles.quickAction}>
@@ -118,131 +125,133 @@ function QuickActionButton({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  greeting: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  balanceCard: {
-    backgroundColor: '#4CAF50',
-    margin: 20,
-    marginTop: 10,
-    padding: 24,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  balanceLabel: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
-  },
-  balanceAmount: {
-    color: '#fff',
-    fontSize: 36,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
-  section: {
-    padding: 20,
-    paddingTop: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  quickAction: {
-    alignItems: 'center',
-  },
-  quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  quickActionIconText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  quickActionLabel: {
-    fontSize: 12,
-    color: '#666',
-  },
-  emptyState: {
-    backgroundColor: '#fff',
-    padding: 32,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  transactionItem: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  txLeft: {
-    flex: 1,
-  },
-  txMerchant: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-  },
-  txDate: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  txAmount: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  txExpense: {
-    color: '#F44336',
-  },
-  txIncome: {
-    color: '#4CAF50',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    header: {
+      padding: 20,
+      paddingBottom: 10,
+    },
+    greeting: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: colors.textPrimary,
+    },
+    subtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    balanceCard: {
+      backgroundColor: colors.primary,
+      margin: 20,
+      marginTop: 10,
+      padding: 24,
+      borderRadius: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    balanceLabel: {
+      color: 'rgba(255,255,255,0.8)',
+      fontSize: 14,
+    },
+    balanceAmount: {
+      color: '#fff',
+      fontSize: 36,
+      fontWeight: 'bold',
+      marginTop: 8,
+    },
+    section: {
+      padding: 20,
+      paddingTop: 10,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      marginBottom: 16,
+    },
+    quickActions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    quickAction: {
+      alignItems: 'center',
+    },
+    quickActionIcon: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    quickActionIconText: {
+      color: '#fff',
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    quickActionLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    emptyState: {
+      backgroundColor: colors.surface,
+      padding: 32,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: 16,
+      color: colors.textPrimary,
+      fontWeight: '500',
+    },
+    emptySubtext: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 8,
+      textAlign: 'center',
+    },
+    transactionItem: {
+      backgroundColor: colors.surface,
+      padding: 16,
+      borderRadius: 12,
+      marginBottom: 8,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    txLeft: {
+      flex: 1,
+    },
+    txMerchant: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: colors.textPrimary,
+    },
+    txDate: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    txAmount: {
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    txExpense: {
+      color: colors.danger,
+    },
+    txIncome: {
+      color: colors.primary,
+    },
+  });
+}

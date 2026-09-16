@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../shared/theme/ThemeContext';
 
 // Import screens (we'll create these next)
 import DashboardScreen from '../features/dashboard/screens/DashboardScreen';
@@ -120,8 +121,10 @@ const TAB_ICONS: Record<keyof RootTabParamList, { focused: string; unfocused: st
 };
 
 export default function Navigation() {
+  const { colors, navigationTheme } = useTheme();
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
@@ -131,11 +134,13 @@ export default function Navigation() {
               : TAB_ICONS[route.name].unfocused;
             return <Ionicons name={iconName as any} size={size} color={color} />;
           },
-          tabBarActiveTintColor: '#4CAF50',
-          tabBarInactiveTintColor: 'gray',
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textSecondary,
           tabBarStyle: {
             paddingBottom: 5,
             height: 60,
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
           },
           tabBarLabelStyle: {
             fontSize: 12,
