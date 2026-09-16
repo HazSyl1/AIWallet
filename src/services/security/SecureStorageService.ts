@@ -2,6 +2,7 @@
 // Wraps iOS Keychain and Android Keystore (Section 5.1, 5.3)
 
 import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 
 // Check if SecureStore is available (not on web)
@@ -104,7 +105,7 @@ class SecureStorageService {
 
     if (!key) {
       // Generate a new 256-bit key (32 bytes as hex = 64 chars)
-      key = this.generateSecureKey(32);
+      key = await this.generateSecureKey(32);
       await this.setItem(SECURE_KEYS.DB_ENCRYPTION_KEY, key);
       console.log('SecureStore: Generated new database encryption key');
     }
@@ -115,17 +116,9 @@ class SecureStorageService {
   /**
    * Generate a cryptographically secure random key
    */
-  private generateSecureKey(bytes: number): string {
-    // Use crypto.getRandomValues for secure random generation
-    const array = new Uint8Array(bytes);
+  private async generateSecureKey(bytes: number): Promise<string> {
+    const array = await Crypto.getRandomBytesAsync(bytes);
 
-    // In React Native, we need to use a polyfill or expo-crypto
-    // For now, using Math.random as fallback (should use expo-crypto in production)
-    for (let i = 0; i < bytes; i++) {
-      array[i] = Math.floor(Math.random() * 256);
-    }
-
-    // Convert to hex string
     return Array.from(array)
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');

@@ -7,6 +7,7 @@ import categoriesReducer from '../features/categories/categoriesSlice';
 import captureReducer from '../features/capture/captureSlice';
 import settingsReducer from '../features/settings/settingsSlice';
 import authReducer from '../features/auth/authSlice';
+import aiReducer from '../features/ai/aiSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     capture: captureReducer,
     settings: settingsReducer,
     auth: authReducer,
+    ai: aiReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

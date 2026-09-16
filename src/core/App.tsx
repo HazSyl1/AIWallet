@@ -12,10 +12,12 @@ import Navigation from './Navigation';
 import ErrorBoundary from './ErrorBoundary';
 import { ThemeProvider, useTheme } from '../shared/theme/ThemeContext';
 import { expoDb, runMigrations, seedDatabase, useDrizzleStudio } from '../services/database';
-import { fetchSettings } from '../features/settings/settingsSlice';
+import { fetchSettings, setDeviceTier } from '../features/settings/settingsSlice';
 import { fetchAccounts } from '../features/accounts/accountsSlice';
 import { fetchCategories } from '../features/categories/categoriesSlice';
 import { restoreSession, syncNow } from '../features/auth/authSlice';
+import { detectDeviceCapability } from '../services/ai/deviceCapability';
+import { setDeviceCapability } from '../features/ai/aiSlice';
 
 function ThemeSync() {
   const theme = useAppSelector((state) => state.settings.theme);
@@ -70,6 +72,15 @@ function AppContent() {
         store.dispatch(restoreSession() as any),
       ]);
       console.log('Initial data loaded');
+
+      const capability = detectDeviceCapability();
+      store.dispatch(setDeviceCapability(capability));
+
+      // 'connected' is set when BYOK is active — don't stomp it with the hardware tier.
+      if (!store.getState().settings.byokEnabled) {
+        store.dispatch(setDeviceTier(capability.tier) as any);
+        console.log('Device tier detected:', capability.tier);
+      }
 
       setIsInitializing(false);
     } catch (err) {

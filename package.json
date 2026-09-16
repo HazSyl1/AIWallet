@@ -12,13 +12,17 @@
     "@supabase/supabase-js": "^2.116.0",
     "drizzle-orm": "^0.45.2",
     "expo": "~57.0.22",
+    "expo-build-properties": "~57.0.20",
     "expo-crypto": "~57.0.3",
+    "expo-dev-client": "~57.0.19",
+    "expo-device": "~57.0.2",
     "expo-drizzle-studio-plugin": "^0.2.1",
     "expo-file-system": "^57.0.6",
     "expo-image-picker": "~57.0.17",
     "expo-secure-store": "~57.0.4",
     "expo-sqlite": "~57.0.3",
     "expo-status-bar": "~57.0.1",
+    "llama.rn": "^0.13.0-rc.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
@@ -35,13 +39,15 @@
     "@types/react": "~19.2.2",
     "@types/uuid": "^10.0.0",
     "drizzle-kit": "^0.31.10",
+    "patch-package": "^8.0.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "postinstall": "patch-package"
   },
   "private": true
 }

@@ -242,6 +242,19 @@ const MIGRATIONS: Migration[] = [
       `CREATE INDEX IF NOT EXISTS \`idx_sync_queue_entity\` ON \`sync_queue\` (\`entity_type\`, \`entity_id\`)`,
     ],
   },
+  {
+    version: 3,
+    name: '0002_model_catalog_fields',
+    statements: [
+      `ALTER TABLE \`model_packages\` ADD COLUMN \`params_billions\` real`,
+      `ALTER TABLE \`model_packages\` ADD COLUMN \`context_length\` integer`,
+    ],
+  },
+  {
+    version: 4,
+    name: '0003_model_supports_voice',
+    statements: [`ALTER TABLE \`model_packages\` ADD COLUMN \`supports_voice\` integer DEFAULT 0`],
+  },
 ];
 
 /**

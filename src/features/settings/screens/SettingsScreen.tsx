@@ -4,6 +4,9 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { SettingsStackParamList } from '../../../core/Navigation';
 import { useAppDispatch, useAppSelector } from '../../../core/hooks';
 import { resetDatabase } from '../../../services/database';
 import { fetchAccounts } from '../../accounts/accountsSlice';
@@ -31,6 +34,7 @@ interface SettingSection {
 
 export default function SettingsScreen() {
   const dispatch = useAppDispatch();
+  const navigation = useNavigation<StackNavigationProp<SettingsStackParamList>>();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const settings = useAppSelector((state) => state.settings);
@@ -145,7 +149,7 @@ export default function SettingsScreen() {
           icon: 'hardware-chip-outline',
           title: 'Model Manager',
           subtitle: settings.deviceTier === 'core' ? 'No model installed' : 'Manage AI models',
-          onPress: () => console.log('Model Manager'),
+          onPress: () => navigation.navigate('ModelManager'),
         },
         {
           icon: 'key-outline',
@@ -153,7 +157,7 @@ export default function SettingsScreen() {
           subtitle: settings.hasOpenAIKey || settings.hasAnthropicKey
             ? 'API key configured'
             : 'Connect OpenAI or Anthropic',
-          onPress: () => console.log('BYOK Setup'),
+          onPress: () => navigation.navigate('BYOKSetup'),
         },
       ],
     },

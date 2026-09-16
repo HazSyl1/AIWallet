@@ -1,7 +1,7 @@
 // Navigation Configuration
 
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, type NavigatorScreenParams } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,8 @@ import TransactionListScreen from '../features/transactions/screens/TransactionL
 import CaptureScreen from '../features/capture/screens/CaptureScreen';
 import AccountsScreen from '../features/accounts/screens/AccountsScreen';
 import SettingsScreen from '../features/settings/screens/SettingsScreen';
+import ModelManagerScreen from '../features/ai/screens/ModelManagerScreen';
+import BYOKSetupScreen from '../features/ai/screens/BYOKSetupScreen';
 
 // Stack params for each tab
 export type DashboardStackParamList = {
@@ -54,7 +56,7 @@ export type RootTabParamList = {
   Transactions: undefined;
   Capture: undefined;
   Accounts: undefined;
-  Settings: undefined;
+  Settings: NavigatorScreenParams<SettingsStackParamList> | undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -107,6 +109,8 @@ function SettingsStackScreen() {
   return (
     <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
       <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
+      <SettingsStack.Screen name="ModelManager" component={ModelManagerScreen} />
+      <SettingsStack.Screen name="BYOKSetup" component={BYOKSetupScreen} />
     </SettingsStack.Navigator>
   );
 }

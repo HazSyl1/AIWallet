@@ -1,15 +1,17 @@
 // Capture Screen - Entry point for adding transactions
 
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppDispatch } from '../../../core/hooks';
+import { useAppDispatch, useAppSelector } from '../../../core/hooks';
 import { startCapture } from '../captureSlice';
 import { CaptureSource } from '../../../shared/types';
 import ManualEntryScreen from './ManualEntryScreen';
+import AiCaptureFlow from './AiCaptureFlow';
 import { useTheme } from '../../../shared/theme/ThemeContext';
 import type { ThemeColors } from '../../../shared/theme/palette';
+import { getActiveModelCapabilities } from '../../../services/ai/deviceCapability';
 
 interface CaptureOption {
   source: CaptureSource;
@@ -17,6 +19,7 @@ interface CaptureOption {
   title: string;
   description: string;
   color: string;
+  requiresCapability?: 'voice' | 'vision';
 }
 
 export default function CaptureScreen() {
@@ -24,6 +27,15 @@ export default function CaptureScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const [showTextCapture, setShowTextCapture] = useState(false);
+
+  const catalog = useAppSelector((s) => s.ai.catalog);
+  const selectedModelId = useAppSelector((s) => s.settings.selectedModelId);
+  const byokEnabled = useAppSelector((s) => s.settings.byokEnabled);
+  const { supportsVoice, supportsVision } = useMemo(
+    () => getActiveModelCapabilities(catalog, selectedModelId, byokEnabled ?? false),
+    [catalog, selectedModelId, byokEnabled]
+  );
 
   const captureOptions = useMemo<CaptureOption[]>(
     () => [
@@ -47,6 +59,7 @@ export default function CaptureScreen() {
         title: 'Voice Input',
         description: 'Speak your transaction details',
         color: colors.primary,
+        requiresCapability: 'voice',
       },
       {
         source: 'image',
@@ -54,18 +67,36 @@ export default function CaptureScreen() {
         title: 'Scan Receipt',
         description: 'Take a photo of a receipt or bill',
         color: colors.warning,
+        requiresCapability: 'vision',
       },
     ],
     [colors]
   );
 
-  const handleSelectMode = (source: CaptureSource) => {
+  const isOptionDisabled = (option: CaptureOption): boolean => {
+    if (option.requiresCapability === 'voice') return !supportsVoice;
+    if (option.requiresCapability === 'vision') return !supportsVision;
+    return false;
+  };
+
+  const handleSelectMode = (option: CaptureOption) => {
+    if (isOptionDisabled(option)) {
+      Alert.alert(
+        'Model Not Compatible',
+        "Your current model doesn't support this feature. Pick a different model in Settings → Model Manager, or connect your own API key via Settings → BYOK Setup."
+      );
+      return;
+    }
+
+    const source = option.source;
     dispatch(startCapture(source));
 
     if (source === 'manual') {
       setShowManualEntry(true);
+    } else if (source === 'text') {
+      setShowTextCapture(true);
     } else {
-      // TODO: Implement other capture modes
+      // TODO: Implement voice/image capture modes
       console.log('Selected capture mode:', source);
     }
   };
@@ -80,22 +111,29 @@ export default function CaptureScreen() {
 
       {/* Capture Options */}
       <View style={styles.options}>
-        {captureOptions.map((option) => (
-          <TouchableOpacity
-            key={option.source}
-            style={styles.optionCard}
-            onPress={() => handleSelectMode(option.source)}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: option.color }]}>
-              <Ionicons name={option.icon as any} size={28} color="#fff" />
-            </View>
-            <View style={styles.optionContent}>
-              <Text style={styles.optionTitle}>{option.title}</Text>
-              <Text style={styles.optionDescription}>{option.description}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color={colors.iconMuted} />
-          </TouchableOpacity>
-        ))}
+        {captureOptions.map((option) => {
+          const isDisabled = isOptionDisabled(option);
+          return (
+            <TouchableOpacity
+              key={option.source}
+              style={[styles.optionCard, isDisabled && styles.optionCardDisabled]}
+              onPress={() => handleSelectMode(option)}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: option.color }]}>
+                <Ionicons name={option.icon as any} size={28} color="#fff" />
+              </View>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionTitle}>{option.title}</Text>
+                <Text style={styles.optionDescription}>{option.description}</Text>
+              </View>
+              {isDisabled ? (
+                <Ionicons name="lock-closed" size={20} color={colors.iconMuted} />
+              ) : (
+                <Ionicons name="chevron-forward" size={24} color={colors.iconMuted} />
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* AI Notice */}
@@ -115,6 +153,18 @@ export default function CaptureScreen() {
         <ManualEntryScreen
           onClose={() => setShowManualEntry(false)}
           onSuccess={() => setShowManualEntry(false)}
+        />
+      </Modal>
+
+      {/* Text Capture Modal */}
+      <Modal
+        visible={showTextCapture}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <AiCaptureFlow
+          onClose={() => setShowTextCapture(false)}
+          onSuccess={() => setShowTextCapture(false)}
         />
       </Modal>
     </SafeAreaView>
@@ -156,6 +206,9 @@ function createStyles(colors: ThemeColors) {
       shadowOpacity: 0.05,
       shadowRadius: 4,
       elevation: 2,
+    },
+    optionCardDisabled: {
+      opacity: 0.5,
     },
     iconContainer: {
       width: 56,

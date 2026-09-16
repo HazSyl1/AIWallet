@@ -309,9 +309,12 @@ export const modelPackages = sqliteTable('model_packages', {
 
   downloadSizeBytes: integer('download_size_bytes').notNull(),
   storageSizeBytes: integer('storage_size_bytes').notNull(),
+  paramsBillions: real('params_billions'),
+  contextLength: integer('context_length'),
 
   supportsText: integer('supports_text', { mode: 'boolean' }).default(true),
   supportsVision: integer('supports_vision', { mode: 'boolean' }).default(false),
+  supportsVoice: integer('supports_voice', { mode: 'boolean' }).default(false),
 
   minTier: text('min_tier', {
     enum: ['core', 'ai_lite', 'ai_standard', 'connected']
